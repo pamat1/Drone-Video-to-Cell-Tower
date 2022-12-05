@@ -3,6 +3,7 @@ import tkinter as tk
 import sys
 import socket
 import threading
+import time
 
 #Globals
 isConnected = False
@@ -69,11 +70,12 @@ def connectClick():
                 if server_response.length >= 1:
                     log.insert(INSERT, server_response)
                     log.insert(INSERT, '\n')
+
             except:
                 pass
+            time.sleep(0.1)
 
-    print('hello')
-    serverThread = threading.Thread(target=recv_from_server())
+    serverThread = threading.Thread(target=lambda: recv_from_server())
     serverThread.start()
 
 
@@ -84,8 +86,7 @@ connect.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
 
 
 def disconnectClick():
-    if(isConnected):
-        serverThread.stop()
+    serverThread.kill()
 
 
 disconnect = tk.Button(window,
