@@ -7,6 +7,7 @@ import threading
 #Globals
 isConnected = False
 clientSocket = None
+serverThread = None
 
 #Initiate Window
 window = Tk()
@@ -45,46 +46,52 @@ input.bind("<Return>", Enter_pressed)
 #Redirect stdout and stderr to the window. Accidentally made a shell oops
 def redirect(inputStr):
     log.insert(INSERT, inputStr)
+
+
 sys.stdout.write = redirect
-#sys.stderr.write = redirect
+sys.stderr.write = redirect
 
-#Tricky part. Multithreading for receiving server responses so the whole thing doesn't fall apart
-def recv_from_server():
-    while True:
-        try:
-            server_response = clientSocket.recvfrom(2048)
-            if (server_response.length >= 1):
-                log.insert(INSERT, server_response)
-                log.insert(INSERT, '\n')
-        except:
-            pass
 
-serverThread = threading.Thread(target=recv_from_server())
-
-#Button for connecting to another client
+#Button for connecting to another client. Thread takes over for some reason when running and breaks when connect
+#button pressed
 def connectClick():
     serverPort = 9876
-    serverName = "127.0.0.1" #localhost
+    serverName = "127.0.0.1"  # localhost
 
     serverAddr = (serverName, serverPort)
-    clientSocket = socket(socket.AF_INET, socket.SOCK_DGRAM)
+    clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    clientSocket.bind((serverName, serverPort))
     isConnected = True
+    def recv_from_server():
+        while True:
+            try:
+                server_response = clientSocket.recvfrom(2048)
+                if server_response.length >= 1:
+                    log.insert(INSERT, server_response)
+                    log.insert(INSERT, '\n')
+            except:
+                pass
+
+    print('hello')
+    serverThread = threading.Thread(target=recv_from_server())
     serverThread.start()
+
 
 connect = tk.Button(window,
                     text="Connect",
-                    command=connectClick())
-connect.grid(column=1, row=1,sticky=tk.W, padx = 5, pady = 5)
+                    command=lambda: connectClick())
+connect.grid(column=1, row=1, sticky=tk.W, padx=5, pady=5)
+
 
 def disconnectClick():
     if(isConnected):
         serverThread.stop()
 
-disconnect = tk.Button(window,
-                       text = "Disconnect",
-                       command=disconnectClick())
-disconnect.grid(column = 2, row=1, sticky=tk.W, padx = 5, pady = 5)
 
+disconnect = tk.Button(window,
+                       text="Disconnect",
+                       command=lambda: disconnectClick())
+disconnect.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 
 
 frame = Frame(window)
