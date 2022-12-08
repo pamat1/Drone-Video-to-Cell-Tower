@@ -36,7 +36,8 @@ class AsyncServerUpdate(Thread):
         while True:
             if isConnected:
                 self.response = server_socket.recvfrom(2048)
-                print(self.response)
+                text = self.response[0].decode()
+                print(text)
 
 
 class App(tk.Tk):
@@ -84,11 +85,13 @@ class App(tk.Tk):
         global serverAddr
         global server_socket
         input_get = self.user_input.get()
-        self.log.insert(INSERT, '%s\n' % input_get)
+
 
         if isConnected:
             server_socket.sendto(input_get.encode(), serverAddr)
+            self.log.insert(INSERT, 'Sending to server: ')
 
+        self.log.insert(INSERT, '%s\n' % input_get)
         self.user_input.delete(0, END)
         return "break"
 
