@@ -11,8 +11,12 @@ import time
 # Globals
 
 isConnected = False
+isP2P = False
 clientSocket = None
 server_socket = None
+p2p_socket = None
+p2p_addr = None
+p2p_port = 9876
 serverPort = 9876
 serverName = "127.0.0.1"  # localhost
 serverAddr = (serverName, serverPort)
@@ -29,6 +33,8 @@ class AsyncServerUpdate(Thread):
         global isConnected
         global serverAddr
         global server_socket
+        global p2p_socket
+        global p2p_addr
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         hello = "hello"
         server_socket.sendto(hello.encode(), serverAddr)
@@ -38,6 +44,29 @@ class AsyncServerUpdate(Thread):
                 self.response = server_socket.recvfrom(2048)
                 text = self.response[0].decode()
                 print(text)
+                if text.split().pop(0) == 'REROUTINGTO':
+                    p2p_addr = (text.split().pop(1), text.split().pop(2))
+                    p2p_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    isP2P = True
+
+class AsyncP2PUpdate(Thread):
+    def __init__(self):
+        super().__init__()
+        self.response = None
+    def run(self):
+        global isConnected
+        global serverAddr
+        global server_socket
+        global p2p_socket
+        while p2p_socket is None:
+            pass
+        while True:
+            if isP2P:
+                self.respone = p2p_socket.recvfrom(2048)
+                text = self.response[0].decode()
+                print(text)
+
+
 
 
 class App(tk.Tk):
@@ -45,7 +74,7 @@ class App(tk.Tk):
         super().__init__()
 
         self.title("GUI Demo")
-        self.geometry('600x400')
+        self.geometry('900x500')
 
         self.create_header_frame()
         self.create_body_frame()
@@ -78,7 +107,86 @@ class App(tk.Tk):
         self.log.pack()
         self.log.grid(column=0, row=1)
 
+        self.input_grid = self.create_input_grid()
+        self.input_grid.grid(column = 1, row = 1)
+
         self.body.grid(column=0, row=1, sticky=tk.W, padx=10, pady=10)
+
+    def create_input_grid(self):
+        self.grid_frame = ttk.Frame(self)
+        # Input 1
+        # adding a label to the root window
+        lbl1 = tk.Label(self.grid_frame, text="Quality:")
+        lbl1.grid(column=0, row=0)
+
+        # adding Entry Field
+        list1 = tk.Listbox(self.grid_frame, width=10, height=2, selectmode=SINGLE, exportselection=0)
+        list1.insert(1, "4k")
+        list1.insert(2, "1080p")
+        list1.grid(column=1, row=0)
+
+        # Listbox 2
+        # adding a label to the root window
+        lbl2 = tk.Label(self.grid_frame, text="Encoding:")
+        lbl2.grid(column=0, row=1)
+
+        # adding Entry Field
+        list2 = tk.Listbox(self.grid_frame, width=10, height=2, selectmode=SINGLE, exportselection=0)
+        list2.insert(1, "h.264")
+        list2.insert(2, "h.265")
+        list2.grid(column=1, row=1)
+
+        # Input 3
+        # adding a label to the root window
+        lbl3 = tk.Label(self.grid_frame, text="Packet Size:")
+        lbl3.grid(column=0, row=2)
+
+        # adding Entry Field
+        input3 = tk.Entry(self.grid_frame, width=10)
+        input3.grid(column=1, row=2)
+
+        # Input 4
+        # adding a label to the root window
+        lbl4 = tk.Label(self.grid_frame, text="Minimum Latency:")
+        lbl4.grid(column=0, row=3)
+
+        # adding Entry Field
+        input4 = tk.Entry(self.grid_frame, width=10)
+        input4.grid(column=1, row=3)
+
+        # Input 5
+        # adding a label to the root window
+        lbl5 = tk.Label(self.grid_frame, text="Round-Trip Time:")
+        lbl5.grid(column=0, row=4)
+
+        # adding Entry Field
+        input5 = tk.Entry(self.grid_frame, width=10)
+        input5.grid(column=1, row=4)
+
+        # Run Test ------------------------------------------------------------
+
+        # adding a label to the root window
+        lbl = tk.Label(self.grid_frame, text="Begin SRT")
+        lbl.grid(column=0, row=6)
+
+
+
+        # function to display text when
+        # button is clicked
+        def clicked():
+            In1 = list1.get()
+            In2 = list1.get()
+            In3 = input3.get()
+            In4 = input4.get()
+            print(
+                "Test Code" + In1 + In2 + In3 + In4)  # this is where SRT command will be placed with input paramters *****
+
+        # button widget with red color text
+        # inside
+        btn = tk.Button(self.grid_frame, text="Run Test", fg="red", command=clicked)
+        # set Button grid
+        btn.grid(column=1, row=6)
+        return self.grid_frame
 
     def handle_enter_pressed(self, event):
         global isConnected
@@ -87,9 +195,12 @@ class App(tk.Tk):
         input_get = self.user_input.get()
 
 
-        if isConnected:
+        if isConnected and not isP2P:
             server_socket.sendto(input_get.encode(), serverAddr)
             self.log.insert(INSERT, 'Sending to server: ')
+        elif isP2P:
+            p2p_socket.sendto(input_get.encode(), p2p_addr)
+            self.log.insert(INSERT, 'Sending to P2P client: ')
 
         self.log.insert(INSERT, '%s\n' % input_get)
         self.user_input.delete(0, END)
@@ -102,6 +213,8 @@ class App(tk.Tk):
 
         server_thread = AsyncServerUpdate()
         server_thread.start()
+        p2p_thread = AsyncP2PUpdate()
+        p2p_thread.start()
 
 
 if __name__ == "__main__":
