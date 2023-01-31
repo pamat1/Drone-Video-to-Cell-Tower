@@ -5,11 +5,11 @@ import sys
 import socket
 import threading
 from threading import Thread
-import requests
-import time
+from ast import literal_eval
 
 # Globals
-
+ADDR = None
+PORT = None
 isConnected = False
 isP2P = False
 clientSocket = None
@@ -35,6 +35,9 @@ class AsyncServerUpdate(Thread):
         global server_socket
         global p2p_socket
         global p2p_addr
+        global isP2P
+        global ADDR
+        global PORT
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         hello = "hello"
         server_socket.sendto(hello.encode(), serverAddr)
@@ -44,9 +47,18 @@ class AsyncServerUpdate(Thread):
                 self.response = server_socket.recvfrom(2048)
                 text = self.response[0].decode()
                 print(text)
-                if text.split().pop(0) == 'REROUTINGTO':
-                    p2p_addr = (text.split().pop(1), text.split().pop(2))
+                command = text.split().pop(0)
+                text = text.split(' ', 1)[1]
+                print(text)
+                if command == 'INFO_NEW':
+                    address = literal_eval(text)
+                    ADDR = address[0]
+                    PORT = address[1]
+                if command == 'REROUTINGTO':
+                    p2p_addr = literal_eval(text)
                     p2p_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    p2p_socket.bind((ADDR, PORT))
+                    print(p2p_addr)
                     isP2P = True
 
 class AsyncP2PUpdate(Thread):
@@ -62,7 +74,7 @@ class AsyncP2PUpdate(Thread):
             pass
         while True:
             if isP2P:
-                self.respone = p2p_socket.recvfrom(2048)
+                self.response = p2p_socket.recvfrom(2048)
                 text = self.response[0].decode()
                 print(text)
 
@@ -195,12 +207,13 @@ class App(tk.Tk):
         input_get = self.user_input.get()
 
 
-        if isConnected and not isP2P:
-            server_socket.sendto(input_get.encode(), serverAddr)
-            self.log.insert(INSERT, 'Sending to server: ')
-        elif isP2P:
+        if isP2P:
             p2p_socket.sendto(input_get.encode(), p2p_addr)
             self.log.insert(INSERT, 'Sending to P2P client: ')
+        elif isConnected:
+            server_socket.sendto(input_get.encode(), serverAddr)
+            self.log.insert(INSERT, 'Sending to server: ')
+
 
         self.log.insert(INSERT, '%s\n' % input_get)
         self.user_input.delete(0, END)
