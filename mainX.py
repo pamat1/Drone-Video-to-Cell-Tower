@@ -7,6 +7,11 @@ import threading
 from threading import Thread
 from ast import literal_eval
 
+#LCD imports
+from smbus2 import SMBus, i2c_msg
+from liquidcrystal_i2c import LCD
+
+
 # Globals
 ADDR = None
 PORT = None
@@ -65,7 +70,20 @@ class AsyncServerUpdate(Thread):
                     print(p2p_addr)
                     isP2P = True
                     
-                if command == '':    
+                if command == 'DISP':
+                    try:
+                        msg = text[0]
+                    except:
+                        msg = "Null!"
+                    
+                    try:
+                        lcd.clear()
+                        lcd.home()
+                        lcd.setCursor(0,1)
+                        lcd.print(msg)
+                    except:
+                        print("Unsuccessful print to lcd.")
+                    
                 
 
 class AsyncP2PUpdate(Thread):
@@ -238,5 +256,13 @@ class App(tk.Tk):
 
 
 if __name__ == "__main__":
+   
+
+    #LCD initialize
+    try:
+        lcd = LCD(bus = 8, addr = 0x27, cols = 16, rows = 2)
+    except:
+        print("unable to initialize lcd screen. lcd commands will not function as intended.")
+    
     app = App()
     app.mainloop()
