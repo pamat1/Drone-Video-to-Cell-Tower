@@ -63,7 +63,9 @@ class AsyncServerUpdate(Thread):
                     print(p2p_addr)
                     isP2P = True
                 if command == 'STREAM_INFO':
-                    subprocess.call(shlex.split('./caller.sh '))
+                    params = literal_eval(text)
+                    
+                    subprocess.call([r'receive.bat'])
                     break
 
 
@@ -90,6 +92,7 @@ class AsyncVideoStreaming(Thread):
     def __init__(self, params):
         super().__init__()
         self.response = None
+        self.params = params
 
     def run(self):
         global ADDR
