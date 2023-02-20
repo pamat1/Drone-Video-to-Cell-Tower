@@ -62,6 +62,9 @@ class AsyncServerUpdate(Thread):
                     p2p_socket.bind((ADDR, PORT))
                     print(p2p_addr)
                     isP2P = True
+                if command == 'STREAM_INFO':
+                    subprocess.call(shlex.split('./caller.sh '))
+                    break
 
 
 class AsyncP2PUpdate(Thread):
@@ -92,7 +95,12 @@ class AsyncVideoStreaming(Thread):
         global ADDR
         stream_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         stream_socket.bind((ADDR, 6000))
-        subprocess.call(shlex.split('./SHELL.sh ' + self.params))
+
+        # Tell server 'I'm streaming at this port'
+        global server_socket
+        command = "STREAM_INFO " + 9584  # port we're using for streaming
+        server_socket.sendto(command.encode())
+        subprocess.call(shlex.split('./pipeline.sh ' + self.params))
 
 
 class App(tk.Tk):
