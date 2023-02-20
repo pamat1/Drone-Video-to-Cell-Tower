@@ -6,6 +6,8 @@ import socket
 import threading
 from threading import Thread
 from ast import literal_eval
+import subprocess
+import shlex
 
 # Globals
 ADDR = None
@@ -60,11 +62,16 @@ class AsyncServerUpdate(Thread):
                     p2p_socket.bind((ADDR, PORT))
                     print(p2p_addr)
                     isP2P = True
+                if command == 'STREAM_INFO':
+                    subprocess.call(shlex.split('./caller.sh '))
+                    break
+
 
 class AsyncP2PUpdate(Thread):
     def __init__(self):
         super().__init__()
         self.response = None
+
     def run(self):
         global isConnected
         global serverAddr
@@ -79,6 +86,21 @@ class AsyncP2PUpdate(Thread):
                 print(text)
 
 
+class AsyncVideoStreaming(Thread):
+    def __init__(self, params):
+        super().__init__()
+        self.response = None
+
+    def run(self):
+        global ADDR
+        stream_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        stream_socket.bind((ADDR, 6000))
+
+        # Tell server 'I'm streaming at this port'
+        global server_socket
+        command = "STREAM_INFO " + 9584  # port we're using for streaming
+        server_socket.sendto(command.encode())
+        subprocess.call(shlex.split('./pipeline.sh ' + self.params))
 
 
 class App(tk.Tk):
@@ -120,7 +142,7 @@ class App(tk.Tk):
         self.log.grid(column=0, row=1)
 
         self.input_grid = self.create_input_grid()
-        self.input_grid.grid(column = 1, row = 1)
+        self.input_grid.grid(column=1, row=1)
 
         self.body.grid(column=0, row=1, sticky=tk.W, padx=10, pady=10)
 
@@ -181,17 +203,21 @@ class App(tk.Tk):
         lbl = tk.Label(self.grid_frame, text="Begin SRT")
         lbl.grid(column=0, row=6)
 
-
-
         # function to display text when
         # button is clicked
         def clicked():
+            global isP2P
             In1 = list1.get()
             In2 = list1.get()
             In3 = input3.get()
             In4 = input4.get()
             print(
-                "Test Code" + In1 + In2 + In3 + In4)  # this is where SRT command will be placed with input paramters *****
+                "Test Code " + In1 + In2 + In3 + In4)
+            params = (In1, In2, In3, In4)
+            # If we have established a P2P connection, attempt to start streaming
+            if isP2P:
+                streaming_thread = AsyncVideoStreaming(params)
+                streaming_thread.start()
 
         # button widget with red color text
         # inside
@@ -206,14 +232,12 @@ class App(tk.Tk):
         global server_socket
         input_get = self.user_input.get()
 
-
         if isP2P:
             p2p_socket.sendto(input_get.encode(), p2p_addr)
             self.log.insert(INSERT, 'Sending to P2P client: ')
         elif isConnected:
             server_socket.sendto(input_get.encode(), serverAddr)
             self.log.insert(INSERT, 'Sending to server: ')
-
 
         self.log.insert(INSERT, '%s\n' % input_get)
         self.user_input.delete(0, END)
