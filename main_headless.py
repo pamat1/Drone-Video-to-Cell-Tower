@@ -16,7 +16,7 @@ p2p_socket = None
 p2p_addr = None
 p2p_port = 9876
 serverPort = 9876
-serverName = "127.0.0.1"  # localhost
+serverName = "141.219.61.105"  # replace this with whatever the server IP is
 serverAddr = (serverName, serverPort)
 responseLock = threading.Lock()
 
@@ -55,7 +55,7 @@ class AsyncServerUpdate(Thread):
                 if command == 'REROUTINGTO':
                     p2p_addr = literal_eval(text)
                     p2p_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    p2p_socket.bind((ADDR, PORT))
+                    #p2p_socket.bind((ADDR, PORT))
                     print(p2p_addr)
                     isP2P = True
                 if command == 'STREAM_INFO':
@@ -91,13 +91,13 @@ class AsyncVideoStreaming(Thread):
     def run(self):
         global ADDR
         stream_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        stream_socket.bind((ADDR, 6000))
+        stream_socket.bind((ADDR, 6000)) # Replace this wit 9584? I don't understand the 6000 here
 
         # Tell server 'I'm streaming at this port'
         global server_socket
-        command = "STREAM_INFO " + 9584  # port we're using for streaming
-        server_socket.sendto(command.encode())
-        subprocess.call(shlex.split('./pipeline.sh ' + self.params))
+        command = "STREAM_INFO " + str(9584)  # port we're using for streaming
+        server_socket.sendto(command.encode(), p2p_addr)
+        subprocess.call(shlex.split('./pipeline.sh ' + str(self.params)))
 
 
 if __name__ == "__main__":
@@ -105,6 +105,8 @@ if __name__ == "__main__":
     server_thread.start()
     p2p_thread = AsyncP2PUpdate()
     p2p_thread.start()
+    while not isP2P:
+        pass
     if isP2P:
         streaming_thread = AsyncVideoStreaming(9584)
         streaming_thread.start()

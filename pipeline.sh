@@ -9,7 +9,7 @@ fi
 while true
 do
 gst-launch-1.0 -v \
-          filesrc location=/home/xavier/test4kvideo.mp4 \
+          filesrc location=/home/jetson/test4kvideo.mp4 \
         ! qtdemux \
         ! h264parse \
         ! nvv4l2decoder \
