@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 from socket import *
 import numpy as np
+import requests
 
 HOST = ''
 PORT = 9876
 BUFFER_SIZE = 2048
+
+ip = requests.get("https://www.wikipedia.org").headers["X-Client-IP"]
+print(ip)
 
 CLIENTS = []
 
@@ -31,6 +35,7 @@ while True:
     message, clientAddr = serverSocket.recvfrom(BUFFER_SIZE)
     if not clientAddr in CLIENTS:
         CLIENTS.append(clientAddr)
+        print("New connection: " + str(clientAddr))
         reply = "Connection successful"
         serverSocket.sendto(reply.encode(), clientAddr)
         information = "INFO_NEW " + str(clientAddr)

@@ -20,7 +20,7 @@ p2p_socket = None
 p2p_addr = None
 p2p_port = 9876
 serverPort = 9876
-serverName = "127.0.0.1"  # localhost
+serverName = "141.219.64.105"  # Replace with whatever server IP is
 serverAddr = (serverName, serverPort)
 responseLock = threading.Lock()
 
@@ -63,9 +63,10 @@ class AsyncServerUpdate(Thread):
                     print(p2p_addr)
                     isP2P = True
                 if command == 'STREAM_INFO':
-                    params = literal_eval(text)
-                    
-                    subprocess.call([r'receive.bat'])
+                    port = literal_eval(text)
+                    addr = p2p_addr[0] + ':' + str(port)
+
+                    subprocess.call([r'receive.bat', addr])
                     break
 
 
