@@ -38,7 +38,7 @@ if __name__ == '__main__':
     #Once connected, wait for a 'REROUTINGTO' command
     while True:
         if isConnected:
-            mmResponse = mmSocket.recvfrom(2048)
+            mmResponse = mmSockte.recvfrom(2048)
             text = mmResponse[0].decode()
             print("Response[0]: " + text)
             command = text.split().pop(0)
