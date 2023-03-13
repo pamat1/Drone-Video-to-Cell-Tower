@@ -1,4 +1,3 @@
-import sys
 import socket
 from ast import literal_eval
 import subprocess
