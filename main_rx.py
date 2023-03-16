@@ -73,10 +73,9 @@ if __name__ == '__main__':
                 p2pAddr = literal_eval(text)
                 p2pName = p2pAddr[0]
                 p2pPort = p2pAddr[1]
-                mmSocket.close()
 
                 p2pSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                p2pSocket.bind((thisName, thisPort))
+                p2pSocket.bind(thisAddr)
                 print("Rerouting to: " + str(p2pAddr))
                 print("Created new socket for " + str(thisAddr))
                 isP2P = True
