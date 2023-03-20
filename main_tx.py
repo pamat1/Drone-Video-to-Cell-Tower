@@ -10,6 +10,7 @@ middlemanName = "141.219.64.105"
 middlemanPort = 9876
 middlemanAddr = (middlemanName, middlemanPort)
 mmSocket = None
+thisAddr = None
 
 isP2P = False
 p2pAddr = None
@@ -44,6 +45,8 @@ if __name__ == '__main__':
             text = text.split(' ', 1)[1]
             print("Command: " + command)
             print("Trimmed response: " + text)
+            if command == 'INFO_NEW':
+                thisAddr = literal_eval(text)
             if command == 'REROUTINGTO':
                 p2pAddr = literal_eval(text)
                 p2pName = p2pAddr[0]
@@ -53,9 +56,11 @@ if __name__ == '__main__':
                 isP2P = True
         if isP2P:
             stream_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            #stream_socket.bind(())
+            stream_socket.bind(thisAddr)
+            response = stream_socket.recvfrom(2048)
+            print(response)
             command = "STREAM_INFO " + str(9584)
-            mmSocket.sendto(command.encode(), p2pAddr)
+            stream_socket.sendto(command.encode(), p2pAddr)
             subprocess.call(shlex.split('./pipeline.sh ' + str(9584)))
             break
     while True:  # idle until done

@@ -42,6 +42,9 @@ if __name__ == '__main__':
     #Once connected, wait for a 'REROUTINGTO' command
     while True:
         if isP2P:
+            time.sleep(3)
+            helloworld = "hello world!" # test reverse connection
+            p2pSocket.sendto(helloworld.encode(), p2pAddr)
             print("Waiting for P2P response...")
             p2pResponse = p2pSocket.recvfrom(2048)
             print("received")
