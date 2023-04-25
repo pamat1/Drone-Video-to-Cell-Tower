@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2023 Peter Amat
+Copyright (c) 2023 Peter Amat, Matt Kouba, Nick McKenzie, Cayton Scholz, Anthony Viola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
