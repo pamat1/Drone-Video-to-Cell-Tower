@@ -1,12 +1,13 @@
 # Installation
 
-This installation guide assumes you are working an Nvidia Jetson Nano and a Quecetel EG25-G Cellular Modem.  Steps may apply to other platforms but have not been tested.
+This installation guide assumes you are working an Nvidia Jetson Nano, Quecetel EG25-G Cellular Modem, an Adafruit BNO055 IMU connected to I2C bus 0, and a LCD display connected on I2C bus 1.  Steps may apply to other platforms but have not been tested.  
 
 ## Prerequisites
 
 1. Jetpack 4.6.3 upgraded to Ubuntu 20.04
 2. Python 3 is installed on the system
 3. GCC and relevant base libraries are installed
+4. smbus installed via pip
 
 ## Install Steps
 
